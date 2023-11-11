@@ -1,0 +1,1 @@
+﻿server=localhost;UserId=test;database=test;password=test;SslMode=None;
