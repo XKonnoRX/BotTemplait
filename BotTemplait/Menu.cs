@@ -201,8 +201,33 @@ namespace BotTemplait
             }
             return res;
         }
+        public static List<InlineKeyboardButton[]> GenerateInlineFromDatabase(object[][] buttons, int name, int text, int textlenght, string precallback, int callback, int start, int count)
+        {
+            var lenght = buttons.Length - start;
+            if (lenght > count)
+                lenght = count;
+            var keyboard = new List<InlineKeyboardButton[]>();
+            for (int i = start; i < start + lenght; i++)
+            {
+                string fulltext = "";
+                if(buttons[i][text].ToString() != "")
+                {
+                    int textl = textlenght;
+                    if (textl > buttons[i][text].ToString().Length)
+                        textl = buttons[i][text].ToString().Length;
+                    fulltext = $"{buttons[i][name]} ({buttons[i][text].ToString().Substring(0, textlenght)}...)";
+                }
+                else
+                    fulltext = $"{buttons[i][name]}";
+                keyboard.Add(new InlineKeyboardButton[] { InlineKeyboardButton.WithCallbackData(text: fulltext, callbackData: $"{precallback}|{buttons[i][callback]}") });
+            }
 
-
+            return keyboard;
+        }
+        public static List<InlineKeyboardButton[]> GenerateInlineFromDatabase(object[][] buttons, int name, int text, int textlenght, string precallback, int callback)
+        {
+            return GenerateInlineFromDatabase(buttons,name, text, textlenght, precallback, callback, 0, buttons.Length);
+        }
         //Examples
         public static ReplyKeyboardMarkup MainMenu()
         {
