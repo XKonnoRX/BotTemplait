@@ -6,6 +6,7 @@ namespace BotTemplait
     internal class DataBase
     {
         public static string connectionString { get; set; }
+        public static string DataBaseName { get; set; }
         public static void SendCommand(string command)
         {
             using (var conn = new MySqlConnection(connectionString))

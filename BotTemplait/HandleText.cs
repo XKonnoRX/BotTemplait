@@ -40,26 +40,19 @@ namespace BotTemplait
             var reader = DataBase.Read($"SELECT * FROM users WHERE telegramId = {_chatId}");
             if (reader == null)
             {
-               Message message = await _botClient.SendTextMessageAsync(
-               chatId: _chatId,
-               text: $"{msgdict["start"]}\n{msgdict["register"]}",
-               parseMode: ParseMode.Html,
-               cancellationToken: _cancellationToken);
-               string insertQuery = $"INSERT INTO users (telegramId) " +
-                                     $"VALUES ('{_chatId}')";
-               DataBase.SendCommand(insertQuery);
+                string insertQuery = $"INSERT INTO users (telegramId) " +
+                                      $"VALUES ('{_chatId}')";
+                DataBase.SendCommand(insertQuery);
             }
-            else
-            {
-                Message message = await _botClient.SendTextMessageAsync(
+            Message message = await _botClient.SendTextMessageAsync(
                chatId: _chatId,
-               text: msgdict["startsuccess"],
+               text: msgdict["start"],
                parseMode: ParseMode.Html,
-               replyMarkup:Menu.MainMenu(),
+               replyMarkup: Menu.MainMenu(),
                cancellationToken: _cancellationToken);
-               DataBase.Log(TelegramBot.logpath, $"Enter: id: {reader[(int)EnUsers.telegramId]}, name: {message.Chat.Username}");
-            }
+            DataBase.Log(TelegramBot.logpath, $"Enter: id: {_chatId}, name: {message.Chat.Username}");
         }
+
         public async void Default()
         {
             string msg = "Не смог распознать команду";
