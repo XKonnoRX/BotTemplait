@@ -30,6 +30,9 @@ namespace BotTemplait
             messageContainer.CreateDictionary();
             string connectionString = System.IO.File.ReadAllText("config/config.txt");
             DataBase.connectionString = connectionString;
+            var tables = DataBase.ReaderMultiline("SHOW TABLES;");
+            if (tables.Length == 0)
+                DataBase.SendCommand("CREATE TABLE `users` (`telegramId` VARCHAR(45) NOT NULL,`lastbotmsg` INT NULL DEFAULT 0, PRIMARY KEY (`telegramId`));");
             Client = new TelegramBotClient("bot token");
             using var cts = new CancellationTokenSource();
             var receiverOptions = new ReceiverOptions
