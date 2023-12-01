@@ -22,14 +22,16 @@ namespace BotTemplait
         private ITelegramBotClient _botClient;
         private long _chatId;
         private int _messageId;
+        private Message _message;
         private int _botmessageId;
         private CancellationToken _cancellationToken;
         private Dictionary<string, string> msgdict;
-        public HandleText(ITelegramBotClient botClient, long chatId, int messageId, int botmessageId, CancellationToken cancellationToken)
+        public HandleText(ITelegramBotClient botClient, Message message, int botmessageId, CancellationToken cancellationToken)
         {
             _botClient = botClient;
-            _chatId = chatId;
-            _messageId = messageId;
+            _message = message;
+            _chatId = message.Chat.Id;
+            _messageId = message.MessageId;
             _cancellationToken = cancellationToken;
             _botmessageId = botmessageId;
             msgdict = TelegramBot.messageContainer.messageDict;

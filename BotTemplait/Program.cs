@@ -88,7 +88,7 @@ namespace BotTemplait
             int messageId = callbackQuery.Message.MessageId;
             var message = callbackQuery.Message;
             callbackData = callbackQuery.Data;
-            HandleText customHandleText = new HandleText(botClient, chatId, messageId, messageId, cancellationToken);
+            HandleText customHandleText = new HandleText(botClient, message, messageId, cancellationToken);
             DataBase.Log(logpath, $"Callback {callbackData} from {chatId}");
             try
             {
@@ -102,11 +102,11 @@ namespace BotTemplait
             if (update.Message is not { } message)
                 return;
             string messageText = message.Text;
-            var reader = DataBase.Read($"SELECT * FROM workers WHERE telegramId = {message.Chat.Id}");
+            var reader = DataBase.Read($"SELECT * FROM users WHERE telegramId = {message.Chat.Id}");
             int msgId = 0;
             if (reader != null)
                 msgId = int.Parse(reader[(int)EnUsers.lastbotmsg].ToString());
-            HandleText customHandleText = new HandleText(botClient, message.Chat.Id, message.MessageId, msgId, cancellationToken);
+            HandleText customHandleText = new HandleText(botClient, message, msgId, cancellationToken);
             DataBase.Log(logpath, $"Message '{message.Text}' message in chat {message.Chat.Id}.");
             
             if (reader == null)
@@ -122,9 +122,23 @@ namespace BotTemplait
             {
                 customHandleText.Default();
             }
-
             return;
 
+        }
+        public static void CheckLog(string logpath)
+        {
+            if (logpath == null) return;
+            int readed = 0;
+            while (true)
+            {
+                var text = System.IO.File.ReadAllLines(logpath);
+                for(int i = readed; i< text.Length; i++)
+                {
+                    Console.WriteLine(text[i]);
+                    readed = i+1;
+                }
+                Thread.Sleep(500);
+            }
         }
 
     }

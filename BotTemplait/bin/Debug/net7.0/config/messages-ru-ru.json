@@ -38,7 +38,7 @@
         {
           "type": "payment",
           "text": "test",
-          "back": "test"
+          "back": ""
         }
       ]
     }

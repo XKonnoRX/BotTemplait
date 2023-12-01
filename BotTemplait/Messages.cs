@@ -38,7 +38,7 @@ public class Inline
 
 public class Button
 {
-    public string type { get; set; }
-    public string text { get; set; }
-    public string back { get; set; }
+    public string? type { get; set; }
+    public string? text { get; set; }
+    public string? back { get; set; }
 }
