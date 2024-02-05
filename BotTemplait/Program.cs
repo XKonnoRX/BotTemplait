@@ -20,20 +20,22 @@ namespace BotTemplait
 
         public static MessageContainer messageContainer;
         public static string logpath = "";
+        public static Config config;
         static void Main()
         {
+            config = JsonSerializer.Deserialize<Config>(System.IO.File.ReadAllText("config.json"));
             var date = DateTime.Now;
             System.IO.Directory.CreateDirectory("logs");
             logpath = $"logs/{date.ToString("yyyy.MM.dd HH.mm.ss")} log.txt";
             System.IO.File.Create(logpath);
             messageContainer = JsonSerializer.Deserialize<MessageContainer>(System.IO.File.ReadAllText($"config/messages-ru-ru.json"));
             messageContainer.CreateDictionary();
-            string connectionString = System.IO.File.ReadAllText("config/config.txt");
+            string connectionString = config.mysql;
             DataBase.connectionString = connectionString;
-            var tables = DataBase.ReaderMultiline("SHOW TABLES;");
+            var tables = DataBase.ReadMultiline("SHOW TABLES;");
             if (tables.Length == 0)
-                DataBase.SendCommand("CREATE TABLE `users` (`telegramId` VARCHAR(45) NOT NULL,`lastbotmsg` INT NULL DEFAULT 0, PRIMARY KEY (`telegramId`));");
-            Client = new TelegramBotClient("bot token");
+                DataBase.Send("CREATE TABLE `users` (`telegramId` VARCHAR(45) NOT NULL,`lastbotmsg` INT NULL DEFAULT 0, PRIMARY KEY (`telegramId`));");
+            Client = new TelegramBotClient(config.telegramToken);
             using var cts = new CancellationTokenSource();
             var receiverOptions = new ReceiverOptions
             {

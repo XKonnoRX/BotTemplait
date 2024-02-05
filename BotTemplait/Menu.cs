@@ -130,6 +130,12 @@ namespace BotTemplait
                         // Добавляем встроенную кнопку для оплаты
                         keyboard.Add(new InlineKeyboardButton[] { InlineKeyboardButton.WithPayment(text: buttons[i].text) });
                         break;
+                    case "webapp":
+                        // Добавляем встроенную кнопку c webapp
+                        var webinfo = new WebAppInfo();
+                        webinfo.Url = buttons[i].back;
+                        keyboard.Add(new InlineKeyboardButton[] { InlineKeyboardButton.WithWebApp(text: buttons[i].text, webAppInfo: webinfo) });
+                        break;
                 }
             }
 
@@ -439,7 +445,7 @@ namespace BotTemplait
         }
         public static InlineKeyboardMarkup Cars()
         {
-            var reader = DataBase.ReaderMultiline("SELECT * FROM cars WHERE Status = 'Active'");
+            var reader = DataBase.ReadMultiline("SELECT * FROM cars WHERE Status = 'Active'");
             return new(GenerateInlineFromDatabase(reader, new int[] { 1, 0 }, "car", 0));
         }
         public static InlineKeyboardMarkup WorkPlace()

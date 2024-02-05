@@ -3,13 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotTemplait", "BotTemplait\BotTemplait.csproj", "{BFCA43C6-58FB-4B39-BA2A-7290285AAE86}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{8AE6451A-8B2C-47B8-82AB-6FF817A213D2}"
-	ProjectSection(SolutionItems) = preProject
-		BotTemplait\bin\Debug\net7.0\config\config.txt = BotTemplait\bin\Debug\net7.0\config\config.txt
-		BotTemplait\bin\Debug\net7.0\config\messages-ru-ru.json = BotTemplait\bin\Debug\net7.0\config\messages-ru-ru.json
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotTemplait", "BotTemplait\BotTemplait.csproj", "{BFCA43C6-58FB-4B39-BA2A-7290285AAE86}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

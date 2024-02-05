@@ -6,7 +6,7 @@ namespace BotTemplait
     internal class DataBase
     {
         public static string connectionString { get; set; }
-        public static string DataBaseName { get; set; }
+        public static string Schema { get; set; }
         /// <summary>
         /// Выполняет переданную SQL-команду в базе данных MySQL, используя подключение, предоставленное в строке подключения.
         /// </summary>
@@ -16,7 +16,7 @@ namespace BotTemplait
         /// без возвращения результата. В случае необходимости выполнения команд с возвращением результатов, следует использовать
         /// другие методы, предоставляющие соответствующую функциональность.
         /// </remarks>
-        public static void SendCommand(string command)
+        public static void Send(string command)
         {
             // Использование конструкции using для автоматического освобождения ресурсов после использования
             using (var conn = new MySqlConnection(connectionString))
@@ -92,7 +92,7 @@ namespace BotTemplait
         /// <remarks>
         /// Если запрос не возвращает данные, метод возвращает null.
         /// </remarks>
-        public static object[][] ReaderMultiline(string data)
+        public static object[][] ReadMultiline(string data)
         {
             using (MySqlConnection sqlConnection = new MySqlConnection(connectionString))
             {
