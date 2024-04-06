@@ -4,6 +4,9 @@
     enum EnUsers
     {
         telegramId,
-        lastbotmsg
+        lastbotmsg,
+        username,
+        firstname,
+        lastname
     }
 }

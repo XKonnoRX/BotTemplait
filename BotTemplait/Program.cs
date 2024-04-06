@@ -28,13 +28,20 @@ namespace BotTemplait
             System.IO.Directory.CreateDirectory("logs");
             logpath = $"logs/{date.ToString("yyyy.MM.dd HH.mm.ss")} log.txt";
             System.IO.File.Create(logpath);
-            messageContainer = JsonSerializer.Deserialize<MessageContainer>(System.IO.File.ReadAllText($"config/messages-ru-ru.json"));
+            messageContainer = JsonSerializer.Deserialize<MessageContainer>(System.IO.File.ReadAllText($"messages-ru-ru.json"));
             messageContainer.CreateDictionary();
             string connectionString = config.mysql;
             DataBase.connectionString = connectionString;
+            DataBase.Schema = connectionString.Split("database=")[1].Split(";")[0];
             var tables = DataBase.ReadMultiline("SHOW TABLES;");
             if (tables.Length == 0)
-                DataBase.Send("CREATE TABLE `users` (`telegramId` VARCHAR(45) NOT NULL,`lastbotmsg` INT NULL DEFAULT 0, PRIMARY KEY (`telegramId`));");
+                DataBase.Send(@"CREATE TABLE users (
+        telegramId VARCHAR(45) NOT NULL,
+        lastbotmsg INT NULL DEFAULT 0,
+        username VARCHAR(45) NULL,
+        firstname VARCHAR(45) NULL,
+        lastname VARCHAR(45) NULL,
+        PRIMARY KEY (telegramId));");
             Client = new TelegramBotClient(config.telegramToken);
             using var cts = new CancellationTokenSource();
             var receiverOptions = new ReceiverOptions
@@ -64,7 +71,6 @@ namespace BotTemplait
                 return;
             }
             return;
-
         }
         public static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {

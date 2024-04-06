@@ -42,9 +42,7 @@ namespace BotTemplait
             var reader = DataBase.Read($"SELECT * FROM users WHERE telegramId = {_chatId}");
             if (reader == null)
             {
-                string insertQuery = $"INSERT INTO users (telegramId) " +
-                                      $"VALUES ('{_chatId}')";
-                DataBase.Send(insertQuery);
+                DataBase.Send($"INSERT INTO users (telegramId, username, firstname, lastname) VALUES ('{_chatId}', '{_message.Chat.Username}', '{_message.Chat.FirstName}', '{_message.Chat.FirstName}')");
             }
             Message message = await _botClient.SendTextMessageAsync(
                chatId: _chatId,
