@@ -82,7 +82,6 @@ namespace BotTemplait
             };
 
             DataBase.Log(logpath, ErrorMessage);
-            Process.Start("BotTemplait");
             Environment.Exit(0);
             return Task.CompletedTask;
         }
