@@ -1,46 +1,34 @@
 ﻿{
-  "messages": [
-    {
-      "name": "start",
-      "value": "Добро пожаловать в бот "
-    },
-    {
-      "name": "entererror",
-      "value": "Неверный формат данных, попробуйте ещё раз"
-    },
-    {
-      "name": "startsuccess",
-      "value": "Спасибо за регистрацию"
-    }
-  ],
-  "menues": [
-    {
-      "name": "main",
-      "buttons": [
-        "test"
-      ]
-    }
-  ],
-  "inlines": [
-    {
-      "name": "work_place",
-      "buttons": [
-        {
-          "type": "text",
-          "text": "test",
-          "back": "test"
-        },
-        {
-          "type": "url",
-          "text": "test",
-          "back": "http:\\t.me"
-        },
-        {
-          "type": "payment",
-          "text": "test",
-          "back": ""
-        }
-      ]
-    }
-  ]
+  "messages": {
+    "start": "Добро пожаловать в бот",
+    "entererror": "Неверный формат данных, попробуйте ещё раз",
+    "startsuccess": "Спасибо за регистрацию"
+  },
+  "menues": {
+    "main": [
+      "test"
+    ],
+    "sub": [
+      "test"
+    ]
+  },
+  "inlines": {
+    "work_place": [
+      {
+        "type": "text",
+        "text": "test",
+        "back": "test"
+      },
+      {
+        "type": "url",
+        "text": "test",
+        "back": "http:\\t.me"
+      },
+      {
+        "type": "payment",
+        "text": "test",
+        "back": ""
+      }
+    ]
+  }
 }

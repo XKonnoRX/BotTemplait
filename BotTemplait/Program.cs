@@ -1,16 +1,15 @@
-﻿using MySqlX.XDevAPI;
-using System.Text.Json;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using System.Net.Http.Json;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using System.Diagnostics;
 using System.Reflection.Metadata;
 using System.Threading;
 using System.Text.RegularExpressions;
+using Serilog;
+using Newtonsoft.Json;
 
 namespace BotTemplait
 {
@@ -19,29 +18,19 @@ namespace BotTemplait
         private static TelegramBotClient Client;
 
         public static MessageContainer messageContainer;
-        public static string logpath = "";
+        public static Quest[] quests;
         public static Config config;
         static void Main()
         {
-            config = JsonSerializer.Deserialize<Config>(System.IO.File.ReadAllText("config.json"));
-            var date = DateTime.Now;
-            System.IO.Directory.CreateDirectory("logs");
-            logpath = $"logs/{date.ToString("yyyy.MM.dd HH.mm.ss")} log.txt";
-            System.IO.File.Create(logpath);
-            messageContainer = JsonSerializer.Deserialize<MessageContainer>(System.IO.File.ReadAllText($"messages-ru-ru.json"));
-            messageContainer.CreateDictionary();
+            config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("config.json"));
+            messageContainer = JsonConvert.DeserializeObject<MessageContainer>(System.IO.File.ReadAllText($"messages-ru-ru.json"));
+            quests = JsonConvert.DeserializeObject<QuestContainer>(System.IO.File.ReadAllText($"quest1.json")).quests;
             string connectionString = config.mysql;
-            DataBase.connectionString = connectionString;
-            DataBase.Schema = connectionString.Split("database=")[1].Split(";")[0];
-            var tables = DataBase.ReadMultiline("SHOW TABLES;");
+            DB.connectionString = connectionString;
+            Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
+            var tables = DB.ReadMultiline("SHOW TABLES;");
             if (tables.Length == 0)
-                DataBase.Send(@"CREATE TABLE users (
-        telegramId VARCHAR(45) NOT NULL,
-        lastbotmsg INT NULL DEFAULT 0,
-        username VARCHAR(45) NULL,
-        firstname VARCHAR(45) NULL,
-        lastname VARCHAR(45) NULL,
-        PRIMARY KEY (telegramId));");
+                DB.CreateTables();
             Client = new TelegramBotClient(config.telegramToken);
             using var cts = new CancellationTokenSource();
             var receiverOptions = new ReceiverOptions
@@ -55,7 +44,8 @@ namespace BotTemplait
                 cancellationToken: cts.Token
             );
             var me = Client.GetMeAsync().Result;
-            DataBase.Log(logpath, $"Bot ID: {me.Id}. Bot NAME: {me.FirstName}");
+
+            Log.Information("Bot ID: {Id}. Bot NAME: {Username}", me.Id, me.Username);
             Thread.Sleep(-1);
         }
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -72,7 +62,7 @@ namespace BotTemplait
             }
             return;
         }
-        public static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
+        public static async Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
             var ErrorMessage = exception switch
             {
@@ -80,10 +70,7 @@ namespace BotTemplait
                     => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
                 _ => exception.ToString()
             };
-
-            DataBase.Log(logpath, ErrorMessage);
-            Environment.Exit(0);
-            return Task.CompletedTask;
+            Log.Error(ErrorMessage);
         }
         public static async Task HandleCallbackQuery(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
@@ -91,62 +78,48 @@ namespace BotTemplait
                 return;
             if (callbackQuery.Data is not { } callbackData)
                 return;
+
             long chatId = callbackQuery.Message.Chat.Id;
             int messageId = callbackQuery.Message.MessageId;
             var message = callbackQuery.Message;
             callbackData = callbackQuery.Data;
-            HandleText customHandleText = new HandleText(botClient, message, messageId, cancellationToken);
-            DataBase.Log(logpath, $"Callback {callbackData} from {chatId}");
-            try
+            HandleCallback handle = new HandleCallback(botClient, callbackQuery, message, messageId, cancellationToken);
+            Log.Information("Callback {callbackData} from {chatId}", callbackData, chatId);
+            var commandHandlers = new Dictionary<string, Action>
             {
-                
-            }
-            catch
-            {}
+                //{"callback", () => handle. }
+            };
         }
         public static async Task HandleText(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             if (update.Message is not { } message)
                 return;
+            long chatId = message.Chat.Id;
             string messageText = message.Text;
-            var reader = DataBase.Read($"SELECT * FROM users WHERE telegramId = {message.Chat.Id}");
+            var user = DB.Find<UserData>(s => s.tg_id == message.Chat.Id);
             int msgId = 0;
-            if (reader != null)
-                msgId = int.Parse(reader[(int)EnUsers.lastbotmsg].ToString());
-            HandleText customHandleText = new HandleText(botClient, message, msgId, cancellationToken);
-            DataBase.Log(logpath, $"Message '{message.Text}' message in chat {message.Chat.Id}.");
-            
-            if (reader == null)
+            if (user != null)
+                msgId = user.lastbotmsg;
+            HandleText handle = new HandleText(botClient, message, msgId, cancellationToken);
+            Log.Information("Message '{messageText}' message in chat {chatId}.", messageText, chatId);
+            var commandHandlers = new Dictionary<string, Action>
             {
-                customHandleText.Start();
+                {"/start", () => handle.Start() }
+            };
+            if (user == null)
+            {
+                handle.Start();
                 return;
             }
-            try
+            if (commandHandlers.ContainsKey(message.Text))
             {
-                
-            }
-            catch
-            {
-                customHandleText.Default();
+                commandHandlers[message.Text].Invoke();
+                if (user != null)
+                    DB.Update<UserData>(s => s.tg_id == user.tg_id, s => s.bot_state = "default");
+                return;
             }
             return;
 
         }
-        public static void CheckLog(string logpath)
-        {
-            if (logpath == null) return;
-            int readed = 0;
-            while (true)
-            {
-                var text = System.IO.File.ReadAllLines(logpath);
-                for(int i = readed; i< text.Length; i++)
-                {
-                    Console.WriteLine(text[i]);
-                    readed = i+1;
-                }
-                Thread.Sleep(500);
-            }
-        }
-
     }
 }
