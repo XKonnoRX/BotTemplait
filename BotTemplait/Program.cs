@@ -22,6 +22,8 @@ namespace BotTemplait
         public static Config config;
         static void Main()
         {
+            List<UserData> users = new List<UserData>();
+            users.AddRange(null);
             config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("config.json"));
             messageContainer = JsonConvert.DeserializeObject<MessageContainer>(System.IO.File.ReadAllText($"messages-ru-ru.json"));
             quests = JsonConvert.DeserializeObject<QuestContainer>(System.IO.File.ReadAllText($"quest1.json")).quests;

@@ -108,7 +108,7 @@ namespace BotTemplait
             return GenerateInline(buttons, 0, buttons.Length, postcallback);
         }
         
-        public static List<InlineKeyboardButton[]> GenerateInlineFromDatabase<T>(List<T> data, Expression<Func<T, string>>[] textExpressions, Expression<Func<T, string>> callbackExpression, int start, int count, string? precallback = null, string? postcallback = null)
+        public static List<InlineKeyboardButton[]> GenerateInlineFromDatabase<T>(List<T> data, Expression<Func<T, string>>[] textExpressions, Expression<Func<T, string>> callbackExpression, int start, int count)
         {
             List<Func<T, string>> textFuncs = new();
             foreach(var exp in textExpressions)
@@ -126,21 +126,16 @@ namespace BotTemplait
                 var text = new StringBuilder();
                 foreach (var func in textFuncs)
                     text.Append(func(data[i]));
-                string callback = "";
-                if (!string.IsNullOrEmpty(precallback))
-                    callback = $"{precallback}|";
-                callback += callbackFunc(data[i]);
-                if (!string.IsNullOrEmpty(postcallback))
-                    callback += $"|{postcallback}";
+                string callback = callbackFunc(data[i]);
                 keyboard.Add([InlineKeyboardButton.WithCallbackData(text: text.ToString(), callbackData: callback)]);
             }
             return keyboard;
         }
 
-        public static List<InlineKeyboardButton[]> GenerateInlineFromDatabase<T>(List<T> data, Expression<Func<T, string>>[] textExpression, Expression<Func<T, string>> callbackExpression, string? precallback = null, string? postcallback = null)
+        public static List<InlineKeyboardButton[]> GenerateInlineFromDatabase<T>(List<T> data, Expression<Func<T, string>>[] textExpression, Expression<Func<T, string>> callbackExpression)
         {
             // Вызов предыдущей функции с значениями start и count по умолчанию
-            return GenerateInlineFromDatabase(data, textExpression, callbackExpression, 0, data.Count, precallback, postcallback);
+            return GenerateInlineFromDatabase(data, textExpression, callbackExpression, 0, data.Count);
         }
 
         /// <summary>
@@ -234,5 +229,15 @@ namespace BotTemplait
         {
             return new(GenerateInline(TelegramBot.messageContainer.inlines["work_place"]));
         }
+        //public static InlineKeyboardMarkup MyConstructs(Users user, int page)
+        //{
+        //    int count = 5;
+        //    List<Constructs> constructs = DB.Select<Constructs>(s => s.tg_id == user.tg_id && s.status == true);
+        //    var keyboard = GenerateInlineFromDatabase<Constructs>(constructs, [s => $"Заявка {s.id}"], s => $"construct|{s.id}", page * count, count);
+        //    var pageKeyboard = InlinePages(page, "constructPages", page > 0, page + 1 < Math.Ceiling((double)constructs.Count / count));
+        //    if (pageKeyboard != null)
+        //        keyboard.AddRange(pageKeyboard);
+        //    return new(keyboard);
+        //}
     }
 }
