@@ -18,13 +18,11 @@ namespace BotTemplait
         private static TelegramBotClient Client;
 
         public static MessageContainer messageContainer;
-        public static Quest[] quests;
         public static Config config;
         static void Main()
         {
             config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("config.json"));
             messageContainer = JsonConvert.DeserializeObject<MessageContainer>(System.IO.File.ReadAllText($"messages-ru-ru.json"));
-            quests = JsonConvert.DeserializeObject<QuestContainer>(System.IO.File.ReadAllText($"quest1.json")).quests;
             string connectionString = config.mysql;
             DB.connectionString = connectionString;
             Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
