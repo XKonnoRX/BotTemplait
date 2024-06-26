@@ -8,6 +8,9 @@ using Telegram.Bot.Types.Payments;
 using System.Net;
 using System.Threading;
 using Newtonsoft.Json.Linq;
+using System.Linq.Expressions;
+using System.Text;
+using System.Reflection.PortableExecutable;
 
 namespace BotTemplait
 {
@@ -20,7 +23,6 @@ namespace BotTemplait
         protected int botmessageId;
         protected CancellationToken cancellationToken;
         protected Dictionary<string, string> msgdict;
-        protected Quest[] quests; 
 
         public Handle(ITelegramBotClient botClient, Message message, int botmessageId, CancellationToken cancellationToken)
         {
@@ -31,39 +33,143 @@ namespace BotTemplait
             this.cancellationToken = cancellationToken;
             this.botmessageId = botmessageId;
             msgdict = TelegramBot.messageContainer.messages;
-            quests = TelegramBot.quests;
         }
+        
+    }
+    public class HandleQuest : Handle
+    {
+        public QuestContainer Quest { get; set; }
+        public HandleQuest((ITelegramBotClient botClient, Message message, int botmessageId, CancellationToken cancellationToken) data, QuestContainer quest)
+            : base(data.botClient, data.message, data.botmessageId, data.cancellationToken)
+        {
+            this.Quest = quest;
+        }
+
         public async void QuestStart()
         {
-            //DB.Insert<>();
-            QuestSend(0);
-        }
-        public async void QuestSend(int questId)
-        {
-            var quest = quests[questId];
+            var reader = DB.ReadMultiline($"select * from `{Quest.table}` where `user_id` = '{chatId}' and `finish` = 'false'");
+            if (reader != null || reader.Length != 0)
+                DB.Send($"DELETE FROM `{Quest.table}` WHERE (`id` = '{reader[0][0]}');");
+            int localId = 1;
+            reader = DB.ReadMultiline($"select * from `{Quest.table}` where `user_id` = '{chatId}'");
+            if (reader != null || reader.Length != 0)
+                localId = (int)reader[reader.Length - 1][2] +1;
+            DB.Send($"INSERT INTO `{Quest.table}` (`user_id`, `local_id`) VALUES ('{chatId}', '{localId}');");
+            reader = DB.ReadMultiline($"select * from `{Quest.table}` where `user_id` = '{chatId}'");
+            var line = reader[reader.Length - 1];
             await botClient.SendTextMessageAsync(
                 chatId:chatId,
-                text: quest.message,
-                parseMode:ParseMode.Html,
-                replyMarkup: new InlineKeyboardMarkup(Menu.GenerateInline(quest.buttons)),
+                text: Quest.messages["start"],
+                parseMode: ParseMode.Html,
                 cancellationToken:cancellationToken);
+            QuestSend((int)line[0],0);
         }
-        public async void QuestAnswer(int questId, string value)
+        public async void QuestSend(int lineId, int questId)
         {
-            var quest = quests[questId];
+            var quest = Quest.quests[questId];
+            DB.Update<UserData>(s => s.tg_id == chatId, s=> s.bot_state = $"quest|{Quest.name}|{lineId}|{questId}");
+            await botClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: quest.message,
+                parseMode: ParseMode.Html,
+                replyMarkup: new InlineKeyboardMarkup(Menu.GenerateInline(quest.buttons, precallback: $"quest|{Quest.name}|{lineId}|{questId}")),
+                cancellationToken: cancellationToken);
+        }
+        public async void QuestAnswer(int lineId, int questId, string value)
+        {
+            var reader = DB.Read($"select * from `{Quest.table}` where `id` = '{lineId}'");
+            var quest = Quest.quests[questId];
             await botClient.DeleteMessageAsync(
                 chatId: chatId,
                 messageId: messageId,
                 cancellationToken: cancellationToken);
-            DB.Send($"Update `Table` set `{quest.column}` = {value} where tg_id = {chatId}");
-            if (questId < quests.Length)
-                QuestSend(questId + 1);
+            DB.Send($"Update `{Quest.table}` set `{quest.column}` = {value} where id = {lineId}");
+            if (questId < Quest.quests.Length && !(bool)reader[2])
+                QuestSend(lineId, questId + 1);
             else
-                QuestFinish();
+            {
+                DB.Send($"Update `{Quest.table}` set `finish` = 'true' where id = {lineId}");
+                QuestFinish(lineId);
+            }
         }
-        public async void QuestFinish()
+        public async void QuestFinish(int lineId)
         {
-            
+            DB.Update<UserData>(s => s.tg_id == chatId, s => s.bot_state = $"default");
+            var builder = new StringBuilder();
+            foreach ( var item in Quest.quests )
+            {
+                builder.Append(item.column);
+                builder.Append(", ");
+            }
+            builder.Remove(builder.Length - 1, 1);
+            var reader = DB.Read($"select {builder} from `{Quest.table}` where `user_id` = '{chatId}'");
+            builder = new StringBuilder();
+            builder.AppendLine(Quest.messages["finish"]);
+            for (var i = 0; i < Quest.quests.Length; i++)
+            {
+                builder.Append(Quest.quests[i].name);
+                builder.Append(": ");
+                builder.AppendLine(reader[i].ToString());
+            }
+            await botClient.SendTextMessageAsync(
+                chatId:chatId,
+                text: builder.ToString(),
+                parseMode:ParseMode.Html,
+                replyMarkup:Menu.FinishQuestions(Quest.name, lineId),
+                cancellationToken:cancellationToken
+                );
+        }
+        public async void QuestEdit(int lineId)
+        {
+            var keyboard = new List<InlineKeyboardButton[]>();
+            foreach (var item in Quest.quests)
+                keyboard.Add([InlineKeyboardButton.WithCallbackData($"Изменить {item.name}",$"qsend|{Quest.name}|{lineId}|{item.id}")]);
+            await botClient.EditMessageReplyMarkupAsync(
+                chatId: chatId,
+                messageId:messageId,
+                replyMarkup: new(keyboard),
+                cancellationToken: cancellationToken
+                );
+        }
+        public async void QuestOpen(int lineId)
+        {
+            var builder = new StringBuilder();
+            foreach (var item in Quest.quests)
+            {
+                builder.Append(item.column);
+                builder.Append(", ");
+            }
+            builder.Remove(builder.Length - 1, 1);
+            var reader = DB.Read($"select {builder} from `{Quest.table}` where `user_id` = '{chatId}'");
+            builder = new StringBuilder();
+            builder.AppendLine(Quest.messages["open"]);
+            for (var i = 0; i < Quest.quests.Length; i++)
+            {
+                builder.Append(Quest.quests[i].name);
+                builder.Append(": ");
+                builder.AppendLine(reader[i].ToString());
+            }
+            await botClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: builder.ToString(),
+                parseMode: ParseMode.Html,
+                replyMarkup: Menu.EditQuestions(Quest.name, lineId),
+                cancellationToken: cancellationToken
+                );
+        }
+        public async void QuestList()
+        {
+            var reader = DB.ReadMultiline($"select * from `{Quest.table}` where `tg_id` = '{chatId}' && `finish` = true");
+            var keyboard = new List<InlineKeyboardButton[]>();
+            foreach (var item in reader)
+                keyboard.Add([InlineKeyboardButton.WithCallbackData($"Опрос: {item[2]}", $"qopen|{Quest.name}|{item[0]}")]);
+            await botClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: Quest.messages["list"],
+                parseMode: ParseMode.Html,
+                replyMarkup: new InlineKeyboardMarkup(keyboard),
+                cancellationToken: cancellationToken
+                );
         }
     }
     public class HandleText:Handle

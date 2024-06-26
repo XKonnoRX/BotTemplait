@@ -63,7 +63,7 @@ namespace BotTemplait
         /// <param name="start">Начальный индекс кнопки в массиве.</param>
         /// <param name="count">Количество кнопок, которые следует включить в результат.</param>
         /// <returns>Список массивов встроенных кнопок для телеграм-бота.</returns>
-        public static List<InlineKeyboardButton[]> GenerateInline(Button[] buttons,  int start, int count, string postcallback = "")
+        public static List<InlineKeyboardButton[]> GenerateInline(Button[] buttons,  int start, int count, string precallback = "", string postcallback = "")
         {
             var length = buttons.Length - start;
             if (length > count)
@@ -102,10 +102,10 @@ namespace BotTemplait
         /// <param name="buttons">Массив объектов кнопок.</param>
         /// <param name="postcallback">Callback-данные, общие для всех кнопок.</param>
         /// <returns>Список массивов встроенных кнопок для телеграм-бота.</returns>
-        public static List<InlineKeyboardButton[]> GenerateInline(Button[] buttons, string postcallback = "")
+        public static List<InlineKeyboardButton[]> GenerateInline(Button[] buttons, string precallback = "", string postcallback = "")
         {
             // Вызываем первую версию метода с начальным индексом 0 и количеством кнопок равным длине массива
-            return GenerateInline(buttons, 0, buttons.Length, postcallback);
+            return GenerateInline(buttons, 0, buttons.Length, precallback, postcallback);
         }
         
         public static List<InlineKeyboardButton[]> GenerateInlineFromDatabase<T>(List<T> data, Expression<Func<T, string>>[] textExpressions, Expression<Func<T, string>> callbackExpression, int start, int count)
@@ -219,6 +219,21 @@ namespace BotTemplait
                     res += emoji;
             }
             return res;
+        }
+
+        //For Quests
+        public static InlineKeyboardMarkup FinishQuestions(string quest, int id)
+        {
+            return new(new InlineKeyboardButton[][]
+            {
+            [InlineKeyboardButton.WithCallbackData("Подтвердить", $"qconf|{quest}|{id}"),
+                InlineKeyboardButton.WithCallbackData("Изменить параметр", $"qedit|{quest}|{id}")],
+            });
+        }
+        public static InlineKeyboardMarkup EditQuestions(string quest, int id)
+        {
+            return new(new InlineKeyboardButton[][]
+            {[InlineKeyboardButton.WithCallbackData("Изменить параметр", $"qedit|{quest}|{id}")]});
         }
         //Examples
         public static ReplyKeyboardMarkup MainMenu()

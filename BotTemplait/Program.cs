@@ -22,8 +22,6 @@ namespace BotTemplait
         public static Config config;
         static void Main()
         {
-            List<UserData> users = new List<UserData>();
-            users.AddRange(null);
             config = JsonConvert.DeserializeObject<Config>(System.IO.File.ReadAllText("config.json"));
             messageContainer = JsonConvert.DeserializeObject<MessageContainer>(System.IO.File.ReadAllText($"messages-ru-ru.json"));
             quests = JsonConvert.DeserializeObject<QuestContainer>(System.IO.File.ReadAllText($"quest1.json")).quests;
@@ -85,12 +83,26 @@ namespace BotTemplait
             int messageId = callbackQuery.Message.MessageId;
             var message = callbackQuery.Message;
             callbackData = callbackQuery.Data;
+            var split = callbackData.Split("|");
             HandleCallback handle = new HandleCallback(botClient, callbackQuery, message, messageId, cancellationToken);
             Log.Information("Callback {callbackData} from {chatId}", callbackData, chatId);
+            var qhandle = (botClient, message, messageId, cancellationToken);
+            var questHandlers = new Dictionary<string, HandleQuest>
+            {
+                {"quest1", new HandleQuest(qhandle, JsonConvert.DeserializeObject<QuestContainer>(System.IO.File.ReadAllText("quest1.json"))) }
+            };
             var commandHandlers = new Dictionary<string, Action>
             {
-                //{"callback", () => handle. }
+                {"qsend", () => questHandlers[split[1]].QuestSend(int.Parse(split[2]), int.Parse(split[3])) },
+                {"quest", () => questHandlers[split[1]].QuestAnswer(int.Parse(split[2]), int.Parse(split[3]), split[4]) },
+                {"qedit", () => questHandlers[split[1]].QuestEdit(int.Parse(split[2])) },
+                {"qopen", () => questHandlers[split[1]].QuestOpen(int.Parse(split[2])) }
             };
+            if (commandHandlers.ContainsKey(split[0]))
+            {
+                commandHandlers[split[0]].Invoke();
+                return;
+            }
         }
         public static async Task HandleText(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
@@ -104,9 +116,16 @@ namespace BotTemplait
                 msgId = user.lastbotmsg;
             HandleText handle = new HandleText(botClient, message, msgId, cancellationToken);
             Log.Information("Message '{messageText}' message in chat {chatId}.", messageText, chatId);
+            var qhandle = (botClient, message, msgId, cancellationToken);
+            var questHandlers = new Dictionary<string, HandleQuest>
+            {
+                {"quest1", new HandleQuest(qhandle, JsonConvert.DeserializeObject<QuestContainer>(System.IO.File.ReadAllText("quest1.json"))) }
+            };
             var commandHandlers = new Dictionary<string, Action>
             {
-                {"/start", () => handle.Start() }
+                {"/start", () => handle.Start() },
+                {"Пройти опрос", () => questHandlers["quest1"].QuestStart()},
+                {"Посмотреть опросы", () => questHandlers["quest1"].QuestList()},
             };
             if (user == null)
             {
@@ -118,6 +137,17 @@ namespace BotTemplait
                 commandHandlers[message.Text].Invoke();
                 if (user != null)
                     DB.Update<UserData>(s => s.tg_id == user.tg_id, s => s.bot_state = "default");
+                return;
+            }
+
+            var split = user.bot_state.Split("|");
+            var stateHandlers = new Dictionary<string, Action>
+            {
+                {"quest", () => questHandlers[split[1]].QuestAnswer(int.Parse(split[2]), int.Parse(split[3]), messageText) }
+            };
+            if (stateHandlers.ContainsKey(split[0]))
+            {
+                commandHandlers[message.Text].Invoke();
                 return;
             }
             return;
