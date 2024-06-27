@@ -1,5 +1,6 @@
 {
   "name": "quest1",
+  "title": "Тестовый опросник",
   "table": "quest",
   "messages": {
     "start": "Начало опросника",
@@ -13,6 +14,7 @@
       "name": "Пункт 1",
       "message": "Введи че-нибудь для пункта 1",
       "column": "q1",
+      "enable_input": false,
       "buttons": [
         {
           "type": "text",
@@ -36,22 +38,9 @@
       "name": "Пункт 2",
       "message": "Введи че-нибудь для пункта 2",
       "column": "q2",
+      "enable_input": true,
       "buttons": [
-        {
-          "type": "text",
-          "text": "ответ1",
-          "back": "ответ1"
-        },
-        {
-          "type": "text",
-          "text": "ответ2",
-          "back": "ответ2"
-        },
-        {
-          "type": "text",
-          "text": "ответ3",
-          "back": "ответ3"
-        }
+
       ]
     },
     {
@@ -59,6 +48,7 @@
       "name": "Пункт 3",
       "message": "Введи че-нибудь для пункта 3",
       "column": "q3",
+      "enable_input": false,
       "buttons": [
         {
           "type": "text",

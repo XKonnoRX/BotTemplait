@@ -48,11 +48,11 @@ namespace BotTemplait
         public async void QuestStart()
         {
             var reader = DB.ReadMultiline($"select * from `{Quest.table}` where `user_id` = '{chatId}' and `finish` = 'false'");
-            if (reader != null || reader.Length != 0)
+            if (reader != null && reader.Length != 0)
                 DB.Send($"DELETE FROM `{Quest.table}` WHERE (`id` = '{reader[0][0]}');");
             int localId = 1;
             reader = DB.ReadMultiline($"select * from `{Quest.table}` where `user_id` = '{chatId}'");
-            if (reader != null || reader.Length != 0)
+            if (reader != null && reader.Length != 0)
                 localId = (int)reader[reader.Length - 1][2] +1;
             DB.Send($"INSERT INTO `{Quest.table}` (`user_id`, `local_id`) VALUES ('{chatId}', '{localId}');");
             reader = DB.ReadMultiline($"select * from `{Quest.table}` where `user_id` = '{chatId}'");
@@ -64,16 +64,24 @@ namespace BotTemplait
                 cancellationToken:cancellationToken);
             QuestSend((int)line[0],0);
         }
-        public async void QuestSend(int lineId, int questId)
+        public async void QuestSend(int lineId, int questId, bool removePrev = false)
         {
+            if(removePrev)
+                await botClient.DeleteMessageAsync(
+                chatId: chatId,
+                messageId: messageId,
+                cancellationToken: cancellationToken);
             var quest = Quest.quests[questId];
-            DB.Update<UserData>(s => s.tg_id == chatId, s=> s.bot_state = $"quest|{Quest.name}|{lineId}|{questId}");
-            await botClient.SendTextMessageAsync(
+            IReplyMarkup markup = new InlineKeyboardMarkup(Menu.GenerateInline(quest.buttons, precallback: $"quest|{Quest.name}|{lineId}|{questId}"));
+            if (quest.enable_input)
+                DB.Update<UserData>(s => s.tg_id == chatId, s => s.bot_state = $"quest|{Quest.name}|{lineId}|{questId}");
+            var mess = await botClient.SendTextMessageAsync(
                 chatId: chatId,
                 text: quest.message,
                 parseMode: ParseMode.Html,
-                replyMarkup: new InlineKeyboardMarkup(Menu.GenerateInline(quest.buttons, precallback: $"quest|{Quest.name}|{lineId}|{questId}")),
+                replyMarkup: markup,
                 cancellationToken: cancellationToken);
+            DB.Update<UserData>(s => s.tg_id == chatId, s => s.lastbotmsg = mess.MessageId);
         }
         public async void QuestAnswer(int lineId, int questId, string value)
         {
@@ -81,14 +89,14 @@ namespace BotTemplait
             var quest = Quest.quests[questId];
             await botClient.DeleteMessageAsync(
                 chatId: chatId,
-                messageId: messageId,
+                messageId: botmessageId,
                 cancellationToken: cancellationToken);
-            DB.Send($"Update `{Quest.table}` set `{quest.column}` = {value} where id = {lineId}");
-            if (questId < Quest.quests.Length && !(bool)reader[2])
+            DB.Send($"Update `{Quest.table}` set `{quest.column}` = '{value}' where id = '{lineId}'");
+            if (questId < Quest.quests.Length-1 && !(bool)reader[3])
                 QuestSend(lineId, questId + 1);
             else
             {
-                DB.Send($"Update `{Quest.table}` set `finish` = 'true' where id = {lineId}");
+                DB.Send($"Update `{Quest.table}` set `finish` = true where id = '{lineId}'");
                 QuestFinish(lineId);
             }
         }
@@ -101,8 +109,8 @@ namespace BotTemplait
                 builder.Append(item.column);
                 builder.Append(", ");
             }
-            builder.Remove(builder.Length - 1, 1);
-            var reader = DB.Read($"select {builder} from `{Quest.table}` where `user_id` = '{chatId}'");
+            builder.Remove(builder.Length - 2, 1);
+            var reader = DB.Read($"select {builder} from `{Quest.table}` where `id` = '{lineId}'");
             builder = new StringBuilder();
             builder.AppendLine(Quest.messages["finish"]);
             for (var i = 0; i < Quest.quests.Length; i++)
@@ -133,14 +141,18 @@ namespace BotTemplait
         }
         public async void QuestOpen(int lineId)
         {
+            await botClient.DeleteMessageAsync(
+                chatId: chatId,
+                messageId: messageId,
+                cancellationToken: cancellationToken);
             var builder = new StringBuilder();
             foreach (var item in Quest.quests)
             {
                 builder.Append(item.column);
                 builder.Append(", ");
             }
-            builder.Remove(builder.Length - 1, 1);
-            var reader = DB.Read($"select {builder} from `{Quest.table}` where `user_id` = '{chatId}'");
+            builder.Remove(builder.Length - 2, 1);
+            var reader = DB.Read($"select {builder} from `{Quest.table}` where `id` = '{lineId}'");
             builder = new StringBuilder();
             builder.AppendLine(Quest.messages["open"]);
             for (var i = 0; i < Quest.quests.Length; i++)
@@ -159,10 +171,10 @@ namespace BotTemplait
         }
         public async void QuestList()
         {
-            var reader = DB.ReadMultiline($"select * from `{Quest.table}` where `tg_id` = '{chatId}' && `finish` = true");
+            var reader = DB.ReadMultiline($"select * from `{Quest.table}` where `user_id` = '{chatId}' && `finish` = true");
             var keyboard = new List<InlineKeyboardButton[]>();
             foreach (var item in reader)
-                keyboard.Add([InlineKeyboardButton.WithCallbackData($"Опрос: {item[2]}", $"qopen|{Quest.name}|{item[0]}")]);
+                keyboard.Add([InlineKeyboardButton.WithCallbackData($"{Quest.title}: {item[2]}", $"qopen|{Quest.name}|{item[0]}")]);
             await botClient.SendTextMessageAsync(
                 chatId: chatId,
                 text: Quest.messages["list"],

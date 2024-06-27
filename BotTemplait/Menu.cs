@@ -72,25 +72,28 @@ namespace BotTemplait
             var keyboard = new List<InlineKeyboardButton[]>();
             for (int i = start; i < start + length; i++)
             {
+                var prec = "";
+                if(!string.IsNullOrEmpty(precallback))
+                    prec = precallback+"|";
                 switch (buttons[i].type)
                 {
                     case "text":
                         // Добавляем встроенную кнопку с текстовыми callback-данными
-                        keyboard.Add(new InlineKeyboardButton[] { InlineKeyboardButton.WithCallbackData(text: buttons[i].text, callbackData: $"{buttons[i].back}|{postcallback}") });
+                        keyboard.Add([InlineKeyboardButton.WithCallbackData(text: buttons[i].text, callbackData: $"{prec}{buttons[i].back}|{postcallback}")]);
                         break;
                     case "url":
                         // Добавляем встроенную кнопку с URL-адресом
-                        keyboard.Add(new InlineKeyboardButton[] { InlineKeyboardButton.WithUrl(text: buttons[i].text, url: buttons[i].back) });
+                        keyboard.Add([InlineKeyboardButton.WithUrl(text: buttons[i].text, url: buttons[i].back)]);
                         break;
                     case "payment":
                         // Добавляем встроенную кнопку для оплаты
-                        keyboard.Add(new InlineKeyboardButton[] { InlineKeyboardButton.WithPayment(text: buttons[i].text) });
+                        keyboard.Add([InlineKeyboardButton.WithPayment(text: buttons[i].text)]);
                         break;
                     case "webapp":
                         // Добавляем встроенную кнопку c webapp
                         var webinfo = new WebAppInfo();
                         webinfo.Url = buttons[i].back;
-                        keyboard.Add(new InlineKeyboardButton[] { InlineKeyboardButton.WithWebApp(text: buttons[i].text, webAppInfo: webinfo) });
+                        keyboard.Add([InlineKeyboardButton.WithWebApp(text: buttons[i].text, webAppInfo: webinfo)]);
                         break;
                 }
             }
@@ -226,7 +229,7 @@ namespace BotTemplait
         {
             return new(new InlineKeyboardButton[][]
             {
-            [InlineKeyboardButton.WithCallbackData("Подтвердить", $"qconf|{quest}|{id}"),
+            [InlineKeyboardButton.WithCallbackData("Подтвердить", $"qopen|{quest}|{id}"),
                 InlineKeyboardButton.WithCallbackData("Изменить параметр", $"qedit|{quest}|{id}")],
             });
         }

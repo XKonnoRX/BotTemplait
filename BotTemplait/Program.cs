@@ -91,10 +91,11 @@ namespace BotTemplait
             };
             var commandHandlers = new Dictionary<string, Action>
             {
-                {"qsend", () => questHandlers[split[1]].QuestSend(int.Parse(split[2]), int.Parse(split[3])) },
+                {"qsend", () => questHandlers[split[1]].QuestSend(int.Parse(split[2]), int.Parse(split[3]), true) },
                 {"quest", () => questHandlers[split[1]].QuestAnswer(int.Parse(split[2]), int.Parse(split[3]), split[4]) },
                 {"qedit", () => questHandlers[split[1]].QuestEdit(int.Parse(split[2])) },
-                {"qopen", () => questHandlers[split[1]].QuestOpen(int.Parse(split[2])) }
+                {"qopen", () => questHandlers[split[1]].QuestOpen(int.Parse(split[2])) },
+                {"qconf", () => botClient.DeleteMessageAsync(chatId: chatId,messageId: messageId,cancellationToken: cancellationToken) }
             };
             if (commandHandlers.ContainsKey(split[0]))
             {
@@ -145,7 +146,7 @@ namespace BotTemplait
             };
             if (stateHandlers.ContainsKey(split[0]))
             {
-                commandHandlers[message.Text].Invoke();
+                stateHandlers[split[0]].Invoke();
                 return;
             }
             return;

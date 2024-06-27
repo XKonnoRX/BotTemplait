@@ -9,6 +9,7 @@ namespace BotTemplait
     public class QuestContainer
     {
         public string name {  get; set; }
+        public string title { get; set; }
         public string table { get; set; }
         public Dictionary<string, string> messages { get; set; }
         public Quest[] quests { get; set; }
@@ -20,6 +21,7 @@ namespace BotTemplait
         public string name { get; set; }
         public string message { get; set; }
         public string column { get; set; }
+        public bool enable_input { get; set; }
         public Button[] buttons { get; set; }
     }
 }
