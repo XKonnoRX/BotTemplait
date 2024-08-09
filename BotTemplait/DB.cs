@@ -20,11 +20,13 @@ public class DB : DbContext
         using var context = new DB();
         context.Database.EnsureCreated();
     }
-    public static void Insert<T>(T entity) where T : class
+    public static T Insert<T>(T entity) where T : class
     {
         using var context = new DB();
         context.Set<T>().Add(entity);
         context.SaveChanges();
+        context.Entry(entity).Reload();
+        return entity;
     }
     public static T Insert<T>(T entity, Func<T?, bool> returnValue) where T : class
     {
@@ -47,6 +49,18 @@ public class DB : DbContext
         if (content != null)
         {
             context.Remove(content);
+            context.SaveChanges();
+            return true;
+        }
+        return false;
+    }
+    public static bool DeleteAll<T>(Func<T, bool> condition) where T : class
+    {
+        using var context = new DB();
+        var itemsToDelete = context.Set<T>().Where(condition).ToList();
+        if (itemsToDelete.Any())
+        {
+            context.RemoveRange(itemsToDelete);
             context.SaveChanges();
             return true;
         }
@@ -93,16 +107,18 @@ public class DB : DbContext
             context.SaveChanges();
         }
     }
-    public static void UpdateEntity<T>(T target, T source)
+    public static void UpdateEntity<T>(T target, T source) where T : class
     {
+        using var context = new DB();
+        context.Set<T>().Attach(target);
         var properties = typeof(T).GetProperties()
             .Where(prop => prop.CanRead && prop.CanWrite);
-
         foreach (var prop in properties)
         {
             var value = prop.GetValue(source, null);
             prop.SetValue(target, value, null);
         }
+        context.SaveChanges();
     }
     public static void Send(string command)
     {
