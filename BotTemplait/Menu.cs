@@ -152,48 +152,30 @@ namespace BotTemplait
         public static List<InlineKeyboardButton[]> InlinePages(int page, string callback, bool back, bool front)
         {
             // Преобразование номера страницы в строку с использованием эмодзи для цифр
-            string pageNumber = IntegerToEmoji(page + 1);
-
-            // Генерация клавиатуры в зависимости от поддержки кнопок "назад" и "вперед"
+            return InlinePages(page, IntegerToEmoji(page + 1), callback,back,front);
+        }
+        public static List<InlineKeyboardButton[]> InlinePages(int page, string name, string callback, bool back, bool front)
+        {
+            string pageNumber = name;
             if (front && back)
             {
-                return new List<InlineKeyboardButton[]>()
-        {
-            new InlineKeyboardButton[]
-            {
+                return [[
                 InlineKeyboardButton.WithCallbackData(text: "⬅️", callbackData: $"{callback}|{page - 1}"),
                 InlineKeyboardButton.WithCallbackData(text: $"{pageNumber}", callbackData: $"{callback}|{page}"),
-                InlineKeyboardButton.WithCallbackData(text: "➡️", callbackData: $"{callback}|{page + 1}")
-            }
-        };
+                InlineKeyboardButton.WithCallbackData(text: "➡️", callbackData: $"{callback}|{page + 1}")]];
             }
             if (front)
             {
-                return new List<InlineKeyboardButton[]>()
-        {
-            new InlineKeyboardButton[]
-            {
-                InlineKeyboardButton.WithCallbackData(text: $"{pageNumber}", callbackData: $"{callback}|{page}"),
-                InlineKeyboardButton.WithCallbackData(text: "➡️", callbackData: $"{callback}|{page + 1}")
-            }
-        };
+                return [[InlineKeyboardButton.WithCallbackData(text: $"{pageNumber}", callbackData: $"{callback}|{page}"),
+                InlineKeyboardButton.WithCallbackData(text: "➡️", callbackData: $"{callback}|{page + 1}")]];
             }
             if (back)
             {
-                return new List<InlineKeyboardButton[]>()
-        {
-            new InlineKeyboardButton[]
-            {
-                InlineKeyboardButton.WithCallbackData(text: "⬅️", callbackData: $"{callback}|{page - 1}"),
-                InlineKeyboardButton.WithCallbackData(text: $"{pageNumber}", callbackData: $"{callback}|{page}")
+                return [[InlineKeyboardButton.WithCallbackData(text: "⬅️", callbackData: $"{callback}|{page - 1}"),
+                InlineKeyboardButton.WithCallbackData(text: $"{pageNumber}", callbackData: $"{callback}|{page}")]];
             }
-        };
-            }
-
-            // Возвращение null, если не предусмотрены кнопки "назад" и "вперед"
             return null;
         }
-
         /// <summary>
         /// Преобразует целое число в строку, заменяя каждую цифру на соответствующее эмодзи.
         /// </summary>
