@@ -141,6 +141,10 @@ namespace BotTemplait
             return GenerateInlineFromDatabase(data, textExpression, callbackExpression, 0, data.Count);
         }
 
+        public static List<InlineKeyboardButton[]> InlinePages(int page, string callback, int rows, int count)
+        {
+            return InlinePages(page, callback, page > 0, page+1 < Math.Ceiling((double)count / rows));
+        }
         /// <summary>
         /// Генерирует список массивов InlineKeyboardButton для страниц с поддержкой кнопок "назад" и "вперед".
         /// </summary>
@@ -152,7 +156,7 @@ namespace BotTemplait
         public static List<InlineKeyboardButton[]> InlinePages(int page, string callback, bool back, bool front)
         {
             // Преобразование номера страницы в строку с использованием эмодзи для цифр
-            return InlinePages(page, IntegerToEmoji(page + 1), callback,back,front);
+            return InlinePages(page, IntegerToEmoji(page+1), callback,back,front);
         }
         public static List<InlineKeyboardButton[]> InlinePages(int page, string name, string callback, bool back, bool front)
         {
@@ -176,6 +180,7 @@ namespace BotTemplait
             }
             return null;
         }
+        
         /// <summary>
         /// Преобразует целое число в строку, заменяя каждую цифру на соответствующее эмодзи.
         /// </summary>

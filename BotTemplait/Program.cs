@@ -95,7 +95,8 @@ namespace BotTemplait
                 {"quest", () => questHandlers[split[1]].QuestAnswer(int.Parse(split[2]), int.Parse(split[3]), split[4]) },
                 {"qedit", () => questHandlers[split[1]].QuestEdit(int.Parse(split[2])) },
                 {"qopen", () => questHandlers[split[1]].QuestOpen(int.Parse(split[2])) },
-                {"qconf", () => botClient.DeleteMessageAsync(chatId: chatId,messageId: messageId,cancellationToken: cancellationToken) }
+                {"qconf", () => botClient.DeleteMessageAsync(chatId: chatId,messageId: messageId,cancellationToken: cancellationToken) },
+                {"page", () => handle.Paging(int.Parse(split[1])) }
             };
             if (commandHandlers.ContainsKey(split[0]))
             {
@@ -125,6 +126,7 @@ namespace BotTemplait
                 {"/start", () => handle.Start() },
                 {"Пройти опрос", () => questHandlers["quest1"].QuestStart()},
                 {"Посмотреть опросы", () => questHandlers["quest1"].QuestList()},
+                {"Потыкать странички", () => handle.Paging(0) }
             };
             if (user == null)
             {

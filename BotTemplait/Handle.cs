@@ -34,7 +34,39 @@ namespace BotTemplait
             this.botmessageId = botmessageId;
             msgdict = TelegramBot.messageContainer.messages;
         }
-        
+        public async void Paging(int page)
+        {
+            //типа есть список
+            List<Button> buttons = [];
+            for (int i = 0; i < 22; i++)
+                buttons.Add(new Button { text = $"Пункт {i + 1}", type = "text", back = $"choose|{i + 1}" });
+
+            //создаем кнопки
+            int count = 5;
+            var keys = Menu.GenerateInline([.. buttons], page*count, count);
+            keys.AddRange(Menu.InlinePages(page, $"page", count, buttons.Count));
+            InlineKeyboardMarkup keyboard = new(keys);
+
+            try
+            {
+                await botClient.EditMessageReplyMarkupAsync(
+                    chatId: chatId,
+                    messageId: messageId,
+                    replyMarkup: keyboard,
+                    cancellationToken: cancellationToken
+                    );
+            }
+            catch
+            {
+                await botClient.SendTextMessageAsync(
+                    chatId: chatId,
+                    text: "Сделай свой выбор",
+                    parseMode: ParseMode.Html,
+                    replyMarkup: keyboard,
+                    cancellationToken: cancellationToken
+                    );
+            }
+        }
     }
     public class HandleQuest : Handle
     {
@@ -212,7 +244,7 @@ namespace BotTemplait
                cancellationToken: cancellationToken);
             Console.WriteLine($"Enter: id: {chatId}, name: {message.Chat.Username}");
         }
-
+        
         public async void Default()
         {
             string msg = "Не смог распознать команду";

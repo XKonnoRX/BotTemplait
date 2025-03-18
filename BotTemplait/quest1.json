@@ -48,7 +48,7 @@
       "name": "Пункт 3",
       "message": "Введи че-нибудь для пункта 3",
       "column": "q3",
-      "enable_input": false,
+      "enable_input": true,
       "buttons": [
         {
           "type": "text",
