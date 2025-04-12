@@ -49,7 +49,7 @@ namespace BotTemplait
 
             try
             {
-                await botClient.EditMessageReplyMarkupAsync(
+                await botClient.EditMessageReplyMarkup(
                     chatId: chatId,
                     messageId: messageId,
                     replyMarkup: keyboard,
@@ -58,7 +58,7 @@ namespace BotTemplait
             }
             catch
             {
-                await botClient.SendTextMessageAsync(
+                await botClient.SendMessage(
                     chatId: chatId,
                     text: "Сделай свой выбор",
                     parseMode: ParseMode.Html,
@@ -89,7 +89,7 @@ namespace BotTemplait
             DB.Send($"INSERT INTO `{Quest.table}` (`user_id`, `local_id`) VALUES ('{chatId}', '{localId}');");
             reader = DB.ReadMultiline($"select * from `{Quest.table}` where `user_id` = '{chatId}'");
             var line = reader[reader.Length - 1];
-            await botClient.SendTextMessageAsync(
+            await botClient.SendMessage(
                 chatId:chatId,
                 text: Quest.messages["start"],
                 parseMode: ParseMode.Html,
@@ -99,15 +99,15 @@ namespace BotTemplait
         public async void QuestSend(int lineId, int questId, bool removePrev = false)
         {
             if(removePrev)
-                await botClient.DeleteMessageAsync(
+                await botClient.DeleteMessage(
                 chatId: chatId,
                 messageId: messageId,
                 cancellationToken: cancellationToken);
             var quest = Quest.quests[questId];
-            IReplyMarkup markup = new InlineKeyboardMarkup(Menu.GenerateInline(quest.buttons, precallback: $"quest|{Quest.name}|{lineId}|{questId}"));
+            ReplyMarkup markup = new InlineKeyboardMarkup(Menu.GenerateInline(quest.buttons, precallback: $"quest|{Quest.name}|{lineId}|{questId}"));
             if (quest.enable_input)
                 DB.Update<UserData>(s => s.tg_id == chatId, s => s.bot_state = $"quest|{Quest.name}|{lineId}|{questId}");
-            var mess = await botClient.SendTextMessageAsync(
+            var mess = await botClient.SendMessage(
                 chatId: chatId,
                 text: quest.message,
                 parseMode: ParseMode.Html,
@@ -119,7 +119,7 @@ namespace BotTemplait
         {
             var reader = DB.Read($"select * from `{Quest.table}` where `id` = '{lineId}'");
             var quest = Quest.quests[questId];
-            await botClient.DeleteMessageAsync(
+            await botClient.DeleteMessage(
                 chatId: chatId,
                 messageId: botmessageId,
                 cancellationToken: cancellationToken);
@@ -151,7 +151,7 @@ namespace BotTemplait
                 builder.Append(": ");
                 builder.AppendLine(reader[i].ToString());
             }
-            await botClient.SendTextMessageAsync(
+            await botClient.SendMessage(
                 chatId:chatId,
                 text: builder.ToString(),
                 parseMode:ParseMode.Html,
@@ -164,7 +164,7 @@ namespace BotTemplait
             var keyboard = new List<InlineKeyboardButton[]>();
             foreach (var item in Quest.quests)
                 keyboard.Add([InlineKeyboardButton.WithCallbackData($"Изменить {item.name}",$"qsend|{Quest.name}|{lineId}|{item.id}")]);
-            await botClient.EditMessageReplyMarkupAsync(
+            await botClient.EditMessageReplyMarkup(
                 chatId: chatId,
                 messageId:messageId,
                 replyMarkup: new(keyboard),
@@ -173,7 +173,7 @@ namespace BotTemplait
         }
         public async void QuestOpen(int lineId)
         {
-            await botClient.DeleteMessageAsync(
+            await botClient.DeleteMessage(
                 chatId: chatId,
                 messageId: messageId,
                 cancellationToken: cancellationToken);
@@ -193,7 +193,7 @@ namespace BotTemplait
                 builder.Append(": ");
                 builder.AppendLine(reader[i].ToString());
             }
-            await botClient.SendTextMessageAsync(
+            await botClient.SendMessage(
                 chatId: chatId,
                 text: builder.ToString(),
                 parseMode: ParseMode.Html,
@@ -207,7 +207,7 @@ namespace BotTemplait
             var keyboard = new List<InlineKeyboardButton[]>();
             foreach (var item in reader)
                 keyboard.Add([InlineKeyboardButton.WithCallbackData($"{Quest.title}: {item[2]}", $"qopen|{Quest.name}|{item[0]}")]);
-            await botClient.SendTextMessageAsync(
+            await botClient.SendMessage(
                 chatId: chatId,
                 text: Quest.messages["list"],
                 parseMode: ParseMode.Html,
@@ -236,7 +236,7 @@ namespace BotTemplait
                 newUser.lastname = message.Chat.LastName;
                 DB.Insert<UserData>(newUser);
             }
-            await botClient.SendTextMessageAsync(
+            await botClient.SendMessage(
                chatId: chatId,
                text: msgdict["start"],
                parseMode: ParseMode.Html,
@@ -248,7 +248,7 @@ namespace BotTemplait
         public async void Default()
         {
             string msg = "Не смог распознать команду";
-            await botClient.SendTextMessageAsync(
+            await botClient.SendMessage(
                chatId: chatId,
                text: msg,
                parseMode: ParseMode.Html,

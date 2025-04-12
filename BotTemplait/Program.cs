@@ -37,11 +37,11 @@ namespace BotTemplait
             };
             Client.StartReceiving(
                 updateHandler: HandleUpdateAsync,
-                pollingErrorHandler: HandlePollingErrorAsync,
+                errorHandler: HandlePollingErrorAsync,
                 receiverOptions: receiverOptions,
                 cancellationToken: cts.Token
             );
-            var me = Client.GetMeAsync().Result;
+            var me = Client.GetMe().Result;
 
             Log.Information("Bot ID: {Id}. Bot NAME: {Username}", me.Id, me.Username);
             Thread.Sleep(-1);
@@ -95,7 +95,7 @@ namespace BotTemplait
                 {"quest", () => questHandlers[split[1]].QuestAnswer(int.Parse(split[2]), int.Parse(split[3]), split[4]) },
                 {"qedit", () => questHandlers[split[1]].QuestEdit(int.Parse(split[2])) },
                 {"qopen", () => questHandlers[split[1]].QuestOpen(int.Parse(split[2])) },
-                {"qconf", () => botClient.DeleteMessageAsync(chatId: chatId,messageId: messageId,cancellationToken: cancellationToken) },
+                {"qconf", () => botClient.DeleteMessage(chatId: chatId,messageId: messageId,cancellationToken: cancellationToken) },
                 {"page", () => handle.Paging(int.Parse(split[1])) }
             };
             if (commandHandlers.ContainsKey(split[0]))

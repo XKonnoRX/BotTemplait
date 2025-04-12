@@ -87,13 +87,12 @@ namespace BotTemplait
                         break;
                     case "payment":
                         // Добавляем встроенную кнопку для оплаты
-                        keyboard.Add([InlineKeyboardButton.WithPayment(text: buttons[i].text)]);
+                        keyboard.Add([InlineKeyboardButton.WithPay(text: buttons[i].text)]);
                         break;
                     case "webapp":
                         // Добавляем встроенную кнопку c webapp
-                        var webinfo = new WebAppInfo();
-                        webinfo.Url = buttons[i].back;
-                        keyboard.Add([InlineKeyboardButton.WithWebApp(text: buttons[i].text, webAppInfo: webinfo)]);
+                        var webinfo = new WebAppInfo(buttons[i].back);
+                        keyboard.Add([InlineKeyboardButton.WithWebApp(text: buttons[i].text, webApp: webinfo)]);
                         break;
                 }
             }
