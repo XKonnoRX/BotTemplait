@@ -229,12 +229,13 @@ namespace BotTemplait
             var user = DB.Find<UserData>(s=>s.tg_id == chatId);
             if (user == null)
             {
-                var newUser = new UserData();
-                newUser.tg_id = chatId;
-                newUser.username = message.Chat.Username;
-                newUser.firstname = message.Chat.FirstName;
-                newUser.lastname = message.Chat.LastName;
-                DB.Insert<UserData>(newUser);
+                DB.Insert(new UserData
+                {
+                    tg_id = chatId,
+                    username = message.Chat.Username,
+                    firstname = message.Chat.FirstName,
+                    lastname = message.Chat.LastName
+                });
             }
             await botClient.SendMessage(
                chatId: chatId,

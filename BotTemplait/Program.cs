@@ -135,9 +135,8 @@ namespace BotTemplait
             }
             if (commandHandlers.ContainsKey(message.Text))
             {
+                DB.Update<UserData>(s => s.tg_id == user.tg_id, s => s.bot_state = "default");
                 commandHandlers[message.Text].Invoke();
-                if (user != null)
-                    DB.Update<UserData>(s => s.tg_id == user.tg_id, s => s.bot_state = "default");
                 return;
             }
 

@@ -3,17 +3,36 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq.Expressions;
 using MySql.Data.MySqlClient;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Newtonsoft.Json;
+using Mysqlx.Notice;
+using BotTemplait;
 
 public class DB : DbContext
 {
     public DbSet<BotTemplait.UserData> Users { get; set; }
     public static string connectionString { get; set; }
+
+    private ValueConverter<T, string> Serializer<T>()
+    {
+        return new ValueConverter<T, string>(
+         v => JsonConvert.SerializeObject(v),  // сериализация в строку JSON
+         v => JsonConvert.DeserializeObject<T>(v) // десериализация из строки JSON
+     );
+    }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseMySql(connectionString,
             new MySqlServerVersion(new Version(8, 0, 21)))
                 .EnableSensitiveDataLogging()
                 .EnableDetailedErrors();
+    }
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        //modelBuilder.Entity<UserData>()
+        //     .Property(e => e.json)
+        //     .HasConversion(Serializer<Json>())
+        //     .HasColumnType("JSON");
     }
     public static void CreateTables()
     {
